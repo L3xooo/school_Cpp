@@ -233,13 +233,22 @@ size_t count(const BinarySearchTree *tree) noexcept {
         hodnoty uzlov, v poradi od najmensej po najvacsiu
 */
 
-
-list<int> all(const BinarySearchTree *tree) noexcept {
-    // TODO
-    return list<int>(); // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+void inOrder(Node *Root,list<int> & orderList){
+    if(Root){
+        inOrder(Root->smaller,orderList);
+        orderList.push_back(Root->value);
+        inOrder(Root->greater,orderList);
+    }
 }
 
-//-------------------------------------------------------------------------------------------------
+
+list<int> all(const BinarySearchTree *tree) noexcept {
+    list<int> orderList;
+    inOrder(tree->root,orderList);
+    return orderList; // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+}
+
+//---------------------------------x----------------------------------------------------------------
 // 6. ULOHA (0.4 bodu)
 //-------------------------------------------------------------------------------------------------
 /*
@@ -254,17 +263,19 @@ list<int> all(const BinarySearchTree *tree) noexcept {
 */
 size_t greaterNode(Node* root,int value)
 {
-    if (root == nullptr)
-        return 0;
+    static size_t count = 0;
 
-    if(root->value < value)
-        return 0;
-
-    size_t l = greaterNode(root->smaller,value);
-    size_t r = greaterNode(root->greater,value);
-    return 1 + l + r;
+    if(root){
+        //cout << "nachadzam sa v " << root->value << endl;
+        if(root->value > value){
+            count++;
+            greaterNode(root->smaller,value);
+            //cout << root->value << " ";
+        }
+        greaterNode(root->greater,value);
+    }
+    return count;
 }
-
 
 size_t countGreater(const BinarySearchTree *tree, int value) noexcept {
     auto a = greaterNode(tree->root,value);
@@ -333,25 +344,28 @@ void clear(BinarySearchTree *tree) noexcept {
 
 unsigned contains(const vector<int> & data, int value) noexcept {
     unsigned count = 0;
-    size_t right = data.size()-1,left = 0,middle = (data.size()-1)/2;
+    int right = data.size()-1,left = 0,middle = right/2;
     cout << "LEFT = " << left <<" MIDDLE = "<< middle << " RIGHT = " << right << endl;
     int actualValue;
     if(data.size() == 0)
-        return count;
-    while(true){
+        return 0;
+    if(data.size() == 1)
+        return 1;
+    while (right-left > 0 && right >= 0){
         count++;
+        middle = (right+left)/2;
         actualValue = data.at(middle);
         cout << "Actual value =  " << actualValue << endl;
-        if(actualValue > value && left!=right){
-            left = left,right = middle-1,middle = (right+left)/2;
-           // cout << "++LEFT = " << left <<" MIDDLE = "<< middle << " RIGHT = " << right << endl;
+        if(value == actualValue)
+            return count;
+        if(actualValue > value){
+            right = middle-1;
+            cout << "++LEFT = " << left <<" MIDDLE = "<< middle << " RIGHT = " << right << endl;
         }
-        else if(actualValue < value && left!=right){
-            left = middle+1,right = right,middle = (left+right)/2;
-            //cout << "--LEFT = " << left <<" MIDDLE = "<< middle << " RIGHT = " << right << endl;
-        }
-        else
-            break;
+        if(actualValue < value){
+            left = middle+1;
+            cout << "--LEFT = " << left <<" MIDDLE = "<< middle << " RIGHT = " << right << endl;
+        }   
     }
     return count; // tento riadok zmente podla zadania, je tu len kvoli kompilacii
 }
@@ -440,14 +454,16 @@ map<string, set<size_t>> index(const vector<string> & data) noexcept {
         map<string,set<size_t>>::iterator it = wordIndex.find(word);
         if(it != wordIndex.end()){
             it->second.insert(index);
+            //cout << "PRIDAVAM index k slovu" << it->first << " index  = " <<index<<  endl;
         }
         else{
+            //cout << "Nove slovo" << " " << word << " a index = " << index << endl;
             wordIndex[word].insert(index);
         }
         index ++;
     }
 
-    return map<string, set<size_t>>(); // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+    return wordIndex; // tento riadok zmente podla zadania, je tu len kvoli kompilacii
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -482,14 +498,21 @@ int main() {
         // listPrint(test);
     //Uloha4
         //count(&Root);
+    //Uloha5
+        // list<int> a = all(&Root);
+        // listPrint(a);
     //Uloha6
-        //countGreater(&Root,0);
+        //  int a = countGreater(&Root,0);
+        //  cout << a;
     //Uloha7
         //clear(&Root);
     // tu mozete doplnit testovaci kod
     //ULoha8
-        vector<int> Vector = {100, 102, 104, 106, 108, 110, 112};
-        //cout << Vector.size();
-        cout << (contains(Vector,106));
+        vector<int> Vector = {100,102};
+        //cout << Vector.size() << endl;
+        cout << (contains(Vector,105));
+    //Uloha10
+        // vector<string> data{"pocitac", "lietadlo", "luk", "pocitac", "pocitac", "okno", "luk"};
+        // index(data);
     return 0;
 }
