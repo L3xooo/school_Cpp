@@ -95,7 +95,7 @@ void testUloha2() {
 
 class A {
 public:
-    char met() const {
+    virtual char met() const {
         cout << "Class a" << endl;
         return 'a';
     }
@@ -103,7 +103,7 @@ public:
 
 class B : public A{
 public:
-    char met(){
+    char met() const override{
         cout << "Class b" << endl;
         return 'b';
     }
@@ -138,7 +138,7 @@ void testUloha3() {
 
 class C {
 public:
-    ~C() {
+    virtual ~C() {
         cout << "C::~C()" << endl;
     }
 };
@@ -181,8 +181,23 @@ public:
     int getImaginaryPart() const {
         return imaginary;
     }
-    // TODO tu pridajte operator +=
+    Complex operator += (Complex const &Number){
+        this->real += Number.real;
+        this->imaginary += Number.imaginary;
+        return *this;
+    }
+
+        // TODO tu pridajte operator +=
 };
+
+ostream& operator << (ostream& output,Complex const &obj){
+    char sign;
+    if(obj.getImaginaryPart() > 0)
+        output <<to_string(obj.getRealPart()) << "+" << to_string(obj.getImaginaryPart()) << "i";
+    else
+        output <<to_string(obj.getRealPart()) << to_string(obj.getImaginaryPart()) << "i";
+    return output;
+}
 
 void testUloha5() {
     cout << "----- 5. uloha (operator +=) ---------------------------------------------------" << endl;
@@ -191,14 +206,14 @@ void testUloha5() {
     Complex b(10, 20);
     Complex c(100, 200);
 
-//    c += b += a;
-//
-//    assert(a.getRealPart() == 1);
-//    assert(a.getImaginaryPart() == 2);
-//    assert(b.getRealPart() == 11);
-//    assert(b.getImaginaryPart() == 22);
-//    assert(c.getRealPart() == 111);
-//    assert(c.getImaginaryPart() == 222);
+   c += b += a;
+
+   assert(a.getRealPart() == 1);
+   assert(a.getImaginaryPart() == 2);
+   assert(b.getRealPart() == 11);
+   assert(b.getImaginaryPart() == 22);
+   assert(c.getRealPart() == 111);
+   assert(c.getImaginaryPart() == 222);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -217,13 +232,14 @@ void testUloha5() {
 void testUloha6() {
     cout << "----- 6. uloha (operator << ) --------------------------------------------------" << endl;
 
-    Complex a( 1, 2);
+    Complex a( 1, +2);
     Complex b(-3,-4);
-//    cout << "a = " << a << ", b = " << b << endl;
-//
-//    ostringstream stream;
-//    stream << a << " " << b;
-//    assert(stream.str() == "1+2i -3-4i");
+   cout << "a = " << a << ", b = " << b << endl;
+
+   ostringstream stream;
+   stream << a << " " << b;
+   //cout << stream.str();
+   assert(stream.str() == "1+2i -3-4i");
 }
 
 //=================================================================================================
@@ -268,8 +284,26 @@ struct Tree {
 */
 
 list<char> depthFirstSearchUpperCases(const Tree *tree) {
-    // TODO
-    return list<char>(); // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+    list<char> result;
+    stack<Node *> Stack;
+    Node *actualNode;
+    if(tree == nullptr)
+        return result;
+    Stack.push(tree->root);
+    while(!Stack.empty()){
+        actualNode = Stack.top();
+        Stack.pop();
+        if(isupper(actualNode->value)){
+            result.push_back(actualNode->value);
+            cout << actualNode->value << " ";
+        }
+        if(!actualNode->children.empty()){ 
+                for(auto const& i: actualNode->children){
+                    Stack.push(i);
+                }
+        }
+    }
+    return result; // tento riadok zmente podla zadania, je tu len kvoli kompilacii
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -295,8 +329,26 @@ list<char> depthFirstSearchUpperCases(const Tree *tree) {
 */
 
 list<char> breadthFirstSearchUpperCases(const Tree *tree) {
-    // TODO
-    return list<char>(); // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+    list<char> result;
+    queue<Node *> Que;
+    Node *actualNode;
+    if(tree == nullptr)
+        return result;
+    Que.push(tree->root);
+    while(!Que.empty()){
+        actualNode = Que.front();
+        Que.pop();
+        if(isupper(actualNode->value)){
+            result.push_back(actualNode->value);
+            cout << actualNode->value << " ";
+        }
+        if(!actualNode->children.empty()){ 
+                for(auto const& i: actualNode->children){
+                    Que.push(i);
+                }
+        }
+    }
+    return result; // tento riadok zmente podla zadania, je tu len kvoli kompilacii    
 }
 
 //=================================================================================================
@@ -417,8 +469,37 @@ public:
 */
 
 list<string> breadthFirstSearchReachable(Planet * planet, const string & startCity) {
-    // TODO
-    return list<string>(); // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+    planet->clearSearchData();
+    list<string> Result;
+    queue<City*> Que;
+    City* actualCity;
+    size_t count = 0;
+    string test = startCity;
+    for(auto &city : planet->cities){
+        if(startCity == city.name){
+            Que.push(&city);
+            city.searchData.discovered = true;
+            break;
+        }
+        count++;
+    }
+    if(count == planet->cities.size()){
+        throw CityNotExistsException(startCity);
+    }
+    while(!Que.empty()){
+        actualCity = Que.front();
+        Que.pop();
+        Result.push_back(actualCity->name);        
+        cout << actualCity->name << ", ";
+        if(!actualCity->roads.empty()){
+            for(auto const& city:actualCity->roads){
+                if(city.city->searchData.discovered == false)
+                    Que.push(city.city);
+                    city.city->searchData.discovered = true;
+            }
+        }
+    }
+    return Result; // tento riadok zmente podla zadania, je tu len kvoli kompilacii
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -453,8 +534,67 @@ list<string> breadthFirstSearchReachable(Planet * planet, const string & startCi
 */
 
 map<string, unsigned> dijkstra(Planet * planet, const string & startCity) {
-    // TODO
-    return map<string, unsigned>(); // tento riadok zmente podla zadania, je tu len kvoli kompilacii
+    planet->clearSearchData();
+    map<string,unsigned> Result;
+    queue<City*> Que;
+    City* actualCity;
+    size_t count = 0;
+    string test = startCity;
+    unsigned actualDistance = 0;
+    for(auto &city : planet->cities){
+        if(startCity == city.name){
+            Que.push(&city);
+            city.searchData.discovered = true;
+            break;
+        }
+        count++;
+    }
+    if(count == planet->cities.size()){
+        throw CityNotExistsException(startCity);
+    }
+    while(!Que.empty()){
+        actualCity = Que.front();
+        actualDistance = Result[actualCity->name];
+        cout << "Actual distance = " << actualDistance << " Actual city = " << actualCity->name << endl;
+        Que.pop();
+        if(!actualCity->roads.empty()){
+            for(auto const& city:actualCity->roads){
+                if(city.city->searchData.discovered == false)
+                    Que.push(city.city);
+
+                    city.city->searchData.discovered = true;
+                    map<string,unsigned>::iterator it = Result.find(city.city->name);
+                    if(it != Result.end()){
+                        cout << "nasiel som" << endl;
+                        if(it->second > actualDistance+city.city->searchData.distance){
+                            Result[city.city->name] = actualDistance+city.city->searchData.distance;
+                            cout << "Prepisujem distance" << endl;
+                        }
+                        else
+                            cout << "Neprepisujem distance" << endl;
+                    }
+                    else{
+                        cout << "Nenasiel som vytvaram novy obj" << endl;
+                        Result.insert({city.city->name,actualDistance+city.city->searchData.distance});
+                        cout << "Vytvoril som novy obj " << city.city->name << " Distance = " << actualDistance+city.city->searchData.distance << endl;
+                    }                    
+            }
+        }
+
+
+
+
+        // if(actualCity->searchData.foundShortestPath == true)
+        //     Result.insert({actualCity->name,actualDistance+actualCity->searchData.distance});
+        // if(!actualCity->roads.empty()){
+        //     for(auto const& city:actualCity->roads){
+        //         if(city.city->searchData.discovered == false)
+        //             Que.push(city.city);
+        //             city.city->searchData.discovered = true;
+        //     }
+        // }
+    }
+    return Result; // tento riadok zmente podla zadania, je tu len kvoli kompilacii
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -466,13 +606,90 @@ map<string, unsigned> dijkstra(Planet * planet, const string & startCity) {
 int main() {
     //testUloha1();
     //testUloha2();
-    testUloha3();
+    //testUloha3();
     //testUloha4();
     //testUloha5();
     //testUloha6();
-    //Uloha7
-
-    // tu mozete doplnit testovaci kod
-
+    // Node node1('D');
+    // node1.children = {};
+    // Node node2('E');
+    // node2.children = {};
+    // Node node3('C');
+    // node3.children = {&node1,&node2};
+    // Node node4('F');
+    // node4.children = {};
+    // Node node5('B');
+    // node5.children = {&node3,&node4};
+    // Node node6('H');
+    // node6.children = {};
+    // Node node7('g');
+    // node7.children = {&node6};
+    // Node node8('L');
+    // node8.children = {};
+    // Node node9('j');
+    // node9.children = {};
+    // Node node10('K');
+    // node10.children = {&node8};
+    // Node node11('M');
+    // node11.children = {};
+    // Node node12('N');
+    // node12.children = {};
+    // Node node13('I');
+    // node13.children = {&node9,&node10,&node11,&node12};
+    // Node node14('A');
+    // node14.children = {&node5,&node7,&node13};
+    // Tree first(&node14);
+    //  tu mozete doplnit testovaci kod
+    //Uloha7    
+        //depthFirstSearchUpperCases(&first);
+    //Uloha8
+        //breadthFirstSearchUpperCases(&first);    
+    // City city1("London");
+    // City city2("Wisdon");
+    // City city3("Melon");
+    // City city4("Tilon");
+    // City city5("Lion");
+    // City city6("Billon");
+    // City city7("Turbilon");
+    // City city8("Nylon");
+    // City city9("Gulidon");
+    // City city10("Gaucon");
+    // City city11("Etalon");
+    // City city12("Tigron");
+    // city1.roads = {{&city2,0},{&city3,0}};
+    // city2.roads = {{&city4,0},{&city5,0}};
+    // city3.roads = {{&city5,0},{&city6,0}};
+    // city4.roads = {{&city7,0}};
+    // city5.roads = {{&city8,0}};
+    // city6.roads = {};
+    // city7.roads = {{&city3,0}};
+    // city8.roads = {{&city2,0}};
+    // city9.roads = {{&city8,0},{&city10,0}};
+    // city10.roads = {};
+    // city11.roads = {{&city12,0}};
+    // city12.roads = {};
+    // Planet planet;
+    // planet.cities = {city1,city2,city3,city4,city5,city6,city7,city8,city9,city10,city11,city12};
+    // breadthFirstSearchReachable(&planet,"London");
+    City city1("London");
+    City city2("Haron");
+    City city3("Pecelon");
+    City city4("Nicudon");
+    City city5("Ballon");
+    City city6("Etalon");
+    City city7("Tigron");
+    city1.roads = {{&city2,10},{&city3,40},{&city4,100}};
+    city2.roads = {{&city3,20}};
+    city3.roads = {{&city5,10},{&city4,50}};
+    city4.roads = {};
+    city5.roads = {{&city2,15},{&city4,50}};
+    city6.roads = {{&city7,10}};
+    city7.roads = {};
+    Planet planet;
+    planet.cities = {city1,city2,city3,city4,city5,city6,city7};
+    for(const auto& a : (dijkstra(&planet,"London")))//dijkstra(&planet,"London");
+    {
+        cout << a.first << "    " << a.second << endl;
+    }
     return 0;
 }
